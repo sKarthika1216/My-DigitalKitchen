@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recipe Bank - Diet Assistant</title>
+    <style>
+        
+    :root { 
+        --primary: #0f172a; 
+        --accent: #10b981; 
+        --secondary: #6366f1; 
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', sans-serif;
+        min-height: 100vh;
+        background-attachment: fixed;
+
+        /* LAVENDER THEME: A soft purple-to-blue gradient with the white dots */
+        background: 
+            radial-gradient(rgba(255,255,255,0.5) 1.5px, transparent 1.5px), 
+            linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%) !important;
+        
+        background-size: 25px 25px, auto !important;
+    }
+
+    /* 🔥 THE FIX: This forces all those white boxes in your screenshot to be see-through */
+    .container, .main-wrapper, .app-content, #recipeGrid {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    /* Makes the search count look like a professional floating pill */
+    #recipe-count {
+        background: rgba(255, 255, 255, 0.9);
+        color: #065f46;
+        padding: 10px 25px;
+        border-radius: 50px;
+        display: table;
+        margin: 20px auto !important;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 2px solid #ffffff;
+    }
+
+    .header { 
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+        border-bottom-left-radius: 40px;
+        border-bottom-right-radius: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    /* Attractive Glassmorphism for the search area */
+    .controls-container {
+        max-width: 900px;
+        margin: 10px auto;
+        background: rgba(255, 255, 255, 0.75) !important; 
+        backdrop-filter: blur(12px);
+        padding: 20px;
+        border-radius: 25px;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+        /* 3. Ensure the search inputs look sharp on the new background */
+        input, select {
+            background: white !important;
+            border: 1px solid #cbd5e1;
+        }
+
+        #goalTracker {
+            background: #0f172a;
+            color: white;
+            padding: 12px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .mini-btn {
+            padding: 10px 5px;
+            border-radius: 10px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .search-bar-row {
+            grid-column: span 2;
+            display: flex;
+            gap: 8px;
+        }
+
+        input, select {
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .recipe-card {
+        /* This gives the card its "body" */
+        background: rgba(255, 255, 255, 0.8) !important; /* Change to rgba(255,255,255,0.9) for glass look */
+        padding: 20px;
+        border-radius: 24px !important; /* Extra rounded for a modern look */
+        
+        /* This makes the card "pop" off the green background */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .recipe-card:hover {
+        /* The "lift" effect */
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 35px rgba(0,0,0,0.12) !important;
+    }
+
+        /* Makes the 'Lunch/Dinner' tag look professional */
+        .recipe-card span {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+        #recipeGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 10px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            /* Make sure no background is here */
+            background: transparent !important; 
+        }
+
+        /* ⚠️ DELETE the .recipe-card block that was right here ⚠️ */
+        /* It was overriding your nice colorful glass cards! */
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 10000; padding: 20px;
+        }
+        /* Dark Mode Styles */
+    body.dark-mode {
+        background: 
+            radial-gradient(rgba(255,255,255,0.05) 1.5px, transparent 1.5px), 
+            linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
+        color: #f8fafc;
+    }
+
+    body.dark-mode .recipe-card {
+        background: rgba(30, 41, 59, 0.9) !important;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    body.dark-mode .header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    }
+    
+    /* ... existing CSS ... */
+
+    .mini-btn:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+
+    /* Add these inside your <style> tag */
+
+/* --- ULTIMATE DARK MODE VISIBILITY FIX --- */
+    
+    /* 1. Card Text Fix: Titles white, summary light gray */
+    body.dark-mode .recipe-card h3 { color: #ffffff !important; }
+    body.dark-mode .recipe-card p { color: #cbd5e1 !important; }
+    body.dark-mode .recipe-card span { color: #818cf8 !important; }
+
+    /* 2. THE POP-UP FIX (Modal & Plan Box) */
+    /* We force the pop-up to be DARK with WHITE text so it matches the theme */
+    body.dark-mode #recipeModal > div, 
+    body.dark-mode .recipe-card[style*="border:2px solid"], 
+    body.dark-mode #dayPlanResult .recipe-card {
+        background: #1e293b !important; /* Dark Navy Background */
+        color: #f8fafc !important;      /* White Text */
+        border: 1px solid #475569 !important;
+    }
+
+    /* 3. Text inside Pop-ups */
+    body.dark-mode #recipeModal h2, 
+    body.dark-mode #recipeModal p,
+    body.dark-mode #dayPlanResult h3,
+    body.dark-mode #dayPlanResult div {
+        color: #f8fafc !important;
+    }
+
+    /* 4. Recommendation Bar inside Pop-up */
+    body.dark-mode #recipeModal div[style*="background:#f1f5f9"] {
+        background: #334155 !important; /* Darker bar */
+        color: #cbd5e1 !important;      /* Light gray text */
+    }
+
+    /* 5. Progress Bar Text visibility */
+    body.dark-mode #proteinCountText {
+        color: #34d399 !important; /* Brighter green */
+    }
+
+    /* 6. Mini Buttons Hover */
+    .mini-btn:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+    }
+
+</style>
+
+</head>
+<body>
+
+    <div class="header">
+        <h1>My Digital Kitchen</h1>
+        <p style="opacity: 0.8; font-size: 0.8rem; margin: 5px 0 0 0;">1800 Cal | 90g Protein Goal</p>
+    </div>
+
+    <div class="container">
+        <div class="controls-container">
+            <div id="goalTracker">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <span style="font-weight: bold; font-size: 0.8rem;">🎯 Protein</span>
+                    <span id="proteinCountText" style="font-weight: bold; color: #10b981; font-size: 0.85rem;">0 / 90g</span>
+                </div>
+                <div style="width: 100%; background: #334155; height: 8px; border-radius: 10px; overflow: hidden;">
+                    <div id="proteinProgressBar" style="width: 0%; height: 100%; background: #10b981;"></div>
+                </div>
+                <button onclick="resetDailyGoal()" style="background: none; border: none; color: #94a3b8; font-size: 0.6rem; margin-top: 5px; cursor: pointer; padding:0;">Reset Day</button>
+            </div>
+        
+            <div class="action-grid">
+                <button onclick="filterTurbo()" class="mini-btn" style="background:#f43f5e;">🚀 Turbo</button>
+                <button onclick="filterSalad()" class="mini-btn" style="background:#10b981;">🥗 Salads</button>
+                <button onclick="generateDayPlan()" class="mini-btn" style="background:#6366f1;">🎲 Plan Day</button>
+                <button onclick="showPrep()" class="mini-btn" style="background:#059669;">🗓️ Prep</button>
+                <button onclick="toggleDarkMode()" class="mini-btn" style="background:#4b5563;">🌙 Mode</button>
+            </div>
+        
+            <div class="search-bar-row">
+                <input type="text" id="recipeSearch" placeholder="Search..." oninput="filterEverything()">
+                <select id="mealFilter" onchange="filterEverything()">
+                    <option value="all">Meals</option>
+                    <option value="Breakfast">B-fast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snack">Snack</option>
+                </select>
+                <select id="vegFilter" onchange="filterEverything()" style="padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    <option value="all">All Diets</option>
+                    <option value="Veg">Veg Only</option>
+                    <option value="Non-Veg">Non-Veg Only</option>
+                </select>
+                <button onclick="clearAll()" style="padding: 0 12px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; cursor: pointer;">✕</button>
+            </div>
+
+        </div>
+
+        <div id="dayPlanResult" style="max-width: 900px; margin: 0 auto;"></div>
+        
+        <p id="recipe-count" style="text-align:center; font-weight: bold; color: #64748b; font-size: 0.8rem; margin: 10px 0;">
+             Showing <span id="resultCount">0</span> recipes
+        </p>
+
+        <div id="recipeGrid"></div>
+    </div> <div id="recipeModal" class="modal-overlay"></div>
+    
+    <script>
+        let dailyProtein = 0;
+        let dailyFiber = 0;
+        
+        // 1. DATA FINDER
+        function getStat(r, key) {
+            if (!r) return 0;
+            const text = (r.details + " " + (r.summary || "") + " " + r.name).toLowerCase();
+            const source = (r.proteinSource || "").toLowerCase();
+            const regex = new RegExp(`(\\d+)\\s*g?\\s*${key}|${key}\\s*[:\\-]?\\s*(\\d+)`, "i");
+            const match = text.match(regex);
+            if (match) return parseInt(match[1] || match[2]);
+            if (key === "Protein") {
+                if (/(chicken|lamb|mutton|beef|soy)/i.test(source + text)) return 30;
+                if (/(fish|shrimp|prawn)/i.test(source + text)) return 25;
+                if (/(egg|bhurji|omelet)/i.test(source + text)) return 15;
+                if (/(paneer|quinoa|tofu|dal|lentil|chickpea)/i.test(source + text)) return 15;
+            }
+            return key === "Fiber" ? 5 : 0;
+        }
+        
+        // 2. TURBO FIX (Hyper-Fuzzy Search)
+        function filterTurbo() {
+            const filtered = recipes.filter(r => {
+                const txt = (r.name + " " + r.summary + " " + r.details).toLowerCase();
+                // This looks for ANY number followed by m, min, or mins
+                // OR words like 'fast', 'quick', 'easy', '10', '15'
+                return /\b(\d|1\d|20)\s*(m|min|mins|minutes)\b/i.test(txt) || 
+                       /(quick|fast|easy|instant|ready)/i.test(txt);
+            });
+            displayRecipes(filtered);
+        }
+        
+        // 3. RESET FUNCTION (Total Wipeout)
+        // 1. THE RESET FUNCTION (Now clears the dropdown too)
+        function resetDailyGoal() {
+    dailyProtein = 0;
+    dailyFiber = 0;
+    
+    // 1. Reset Progress Bar Visuals
+    const bar = document.getElementById('proteinProgressBar');
+    const text = document.getElementById('proteinCountText');
+    
+    if (bar) {
+        bar.style.width = "0%";
+        bar.style.background = "#fbbf24"; // Reset color to Yellow
+        bar.style.boxShadow = "none";      // Remove the "Success Glow"
+    }
+    
+    if (text) text.innerText = "0 / 90g P | 0g F";
+    
+    // 2. Reset the Dropdown selections (Syncing UI)
+    const mealFilter = document.getElementById('mealFilter');
+    const vegFilter = document.getElementById('vegFilter'); // Added this too!
+    if (mealFilter) mealFilter.value = 'all'; 
+    if (vegFilter) vegFilter.value = 'all'; 
+    
+    // 3. Clear search and refresh grid
+    document.getElementById('recipeSearch').value = '';
+    displayRecipes(recipes);
+    
+    // 4. Close the plan box
+    closePlanBox();
+}
+        
+        // 4. DISPLAY & MODAL LOGIC
+        function displayRecipes(data) {
+    const grid = document.getElementById('recipeGrid');
+    const countSpan = document.getElementById('resultCount');
+    
+    if (countSpan) countSpan.innerText = data.length;
+    if (!grid) return;
+
+    if (data.length === 0) {
+        grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; padding: 20px;'>No recipes found.</p>";
+        return;
+    }
+
+    grid.innerHTML = data.map(r => {
+        // Logic to check if this recipe is a favorite
+        const heartClass = isFavorite(r.name) ? 'active' : '';
+        
+        return `
+            <div class="recipe-card" onclick="showSpecificRecipe('${r.name.replace(/'/g, "\\'")}')">
+                
+                
+                <span class="meal-tag">${r.mealType}</span>
+                <h3 style="margin:10px 0 5px 0;">${r.name}</h3>
+                <p style="font-size:0.8rem; color:#64748b; margin:0;">${r.summary}</p>
+            </div>
+        `;
+    }).join(''); 
+}
+        
+        function showSpecificRecipe(name) {
+            const r = recipes.find(recipe => recipe.name === name);
+            if (!r) return;
+            const p = getStat(r, "Protein"), f = getStat(r, "Fiber");
+            const pairMatch = r.details.match(/(?:Pair|Serve|With)\s*[:\-]?\s*([^.\n]+)/i);
+        
+            const modal = document.getElementById('recipeModal');
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div style="background:white; padding:25px; border-radius:25px; max-width:450px; width:90%; position:relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+                    <button onclick="closeModal()" style="position:absolute; top:15px; right:15px; border:none; background:#f1f5f9; width:30px; height:30px; border-radius:50%; cursor:pointer;">✕</button>
+                    <h2 style="margin:0;">${r.name}</h2>
+                    <p style="font-size:0.95rem; margin:15px 0; color:#334155; line-height:1.6;">${r.details}</p>
+                    <div style="background:#f1f5f9; padding:12px; border-radius:12px; margin-bottom:15px; font-size:0.85rem;">
+                        <strong>🤝 Recommendation:</strong> ${pairMatch ? pairMatch[1] : "Pair with high-fiber greens"}
+                    </div>
+                    <button onclick="addProteinToGoal(${p}, ${f}); closeModal();" 
+                            style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">
+                        Add to Daily Intake (+${p}g P)
+                    </button>
+                </div>`;
+        }
+        
+        function closeModal() { document.getElementById('recipeModal').style.display = 'none'; }
+        
+        function addProteinToGoal(p, f) {
+            dailyProtein += p; 
+            dailyFiber += f;
+            const bar = document.getElementById('proteinProgressBar');
+            const text = document.getElementById('proteinCountText');
+            
+            if (bar) {
+                let percentage = Math.min((dailyProtein / 90) * 100, 100);
+                bar.style.width = percentage + "%";
+                
+                // Color Logic
+                if (percentage < 40) {
+                    bar.style.background = "#fbbf24"; // Yellow (Start)
+                } else if (percentage < 90) {
+                    bar.style.background = "#6366f1"; // Blue (Getting close)
+                } else {
+                    bar.style.background = "#10b981"; // Green (Goal reached!)
+                    bar.style.boxShadow = "0 0 10px #10b981"; // Glow
+                }
+            }
+            if (text) text.innerText = `${dailyProtein} / 90g P | ${dailyFiber}g F`;
+        }
+        
+        // 5. UTILS
+        function filterSalad() { displayRecipes(recipes.filter(r => /salad|bowl|fresh/i.test(r.name + r.details))); }
+        function clearAll() { 
+    // 1. Clears the typing box
+    document.getElementById('recipeSearch').value = ''; 
+    
+    // 2. Resets the Meal dropdown (B-fast, Lunch, etc.)
+    document.getElementById('mealFilter').value = 'all';
+    
+    // 3. Resets the Diet dropdown (Veg, Non-Veg)
+    document.getElementById('vegFilter').value = 'all'; 
+    
+    // 4. Refreshes the grid to show every recipe again
+    displayRecipes(recipes); 
+}
+
+        function closePlanBox() { document.getElementById('dayPlanResult').innerHTML = ''; }
+        
+        function filterEverything() {
+    // 1. Grab all the current settings
+    const s = document.getElementById('recipeSearch').value.toLowerCase();
+    const m = document.getElementById('mealFilter').value;
+    const v = document.getElementById('vegFilter').value; 
+    
+    // 2. Run the filter on the recipes list
+    const filtered = recipes.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(s) || r.details.toLowerCase().includes(s);
+        const matchesMeal = (m === 'all' || r.mealType === m);
+        
+        // This is the magic line that uses your new dropdown:
+        const matchesVeg = (v === 'all' || r.vegType === v); 
+        
+        return matchesSearch && matchesMeal && matchesVeg;
+    });
+    
+    // 3. Update the screen
+    displayRecipes(filtered);
+    }
+
+        // 6. PREP & PLAN
+        function showPrep() {
+    document.getElementById('dayPlanResult').innerHTML = `
+        <div class="recipe-card" style="border:2px solid #059669; padding:20px; background:#f0fdf4; position:relative; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <button onclick="closePlanBox()" style="position:absolute; top:10px; right:10px; border:none; background:transparent; cursor:pointer; font-size:18px;">✕</button>
+            
+            <h3 style="margin:0 0 15px 0; color:#166534; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.5rem;">🔥</span> Complete Prep Guide
+            </h3>
+
+            <div style="font-size:0.85rem; line-height:1.6; color:#14532d;">
+                <p style="margin: 5px 0;"><b>🍲 Dal:</b> Pressure cook Toor/Moong Dal with turmeric (3 whistles) for instant meals.</p>
+                <p style="margin: 5px 0;"><b>🍚 Grains:</b> Batch cook Quinoa/Rice; cool completely before refrigerating.</p>
+                <p style="margin: 5px 0;"><b>🥚 Eggs:</b> Hard-boil 6-8 eggs; perfect for high-protein snacks or breakfast.</p>
+                <p style="margin: 5px 0;"><b>🫑 Veggies:</b> Chop peppers and spinach for 10-min stir-frys; store lettuce with a paper towel.</p>
+                <p style="margin: 5px 0;"><b>🍗 Protein:</b> Pre-marinate chicken or lamb; pre-roast to 70% for a 5-min Air Fryer finish.</p>
+                
+                <hr style="border: 0; border-top: 1px dashed #10b981; margin: 10px 0;">
+                
+                <p style="margin: 5px 0;"><b>🧄 Aromatics:</b> Blend ginger-garlic paste with a little oil (stays fresh 2 weeks).</p>
+                <p style="margin: 5px 0;"><b>🧅 Onion Hack:</b> Sauté a batch of brown onions and freeze in cubes to save 15 mins/meal.</p>
+                <p style="margin: 5px 0;"><b>🍯 The Sauce:</b> Pre-mix your Soy-Honey-Mayo-Tobasco blend in a mason jar.</p>
+            </div>
+        </div>`;
+}
+        
+        // 2. THE PLAN A DAY (Now including Dinner + Fiber)
+        function generateDayPlan() {
+    let attempts = 0;
+    let b, l, s, pTotal, fTotal;
+    
+    do {
+        // 1. Pick Lunch (This defines the meat/veg for the day)
+        l = recipes.filter(r => r.mealType === 'Lunch').sort(() => 0.5 - Math.random())[0];
+        
+        // 2. Pick Breakfast (MUST be Veg if Lunch is Non-Veg to keep meat variety to 1)
+        // If Lunch is Veg, Breakfast can be Egg or Veg.
+        let bOptions;
+        if (l.vegType === 'Non-Veg') {
+            bOptions = recipes.filter(r => r.mealType === 'Breakfast' && r.vegType === 'Veg');
+        } else {
+            bOptions = recipes.filter(r => r.mealType === 'Breakfast');
+        }
+        b = bOptions.sort(() => 0.5 - Math.random())[0] || recipes.find(r => r.mealType === 'Breakfast');
+
+        // 3. Pick Snack
+        s = recipes.filter(r => r.mealType === 'Snack').sort(() => 0.5 - Math.random())[0];
+
+        // 4. Mirror Math: (Lunch x 2) represents Lunch + Dinner reuse
+        pTotal = getStat(b, "Protein") + (getStat(l, "Protein") * 2) + getStat(s, "Protein");
+        fTotal = getStat(b, "Fiber") + (getStat(l, "Fiber") * 2) + getStat(s, "Fiber");
+        
+        attempts++;
+    } while ((pTotal < 90 || pTotal > 115) && attempts < 100);
+
+    document.getElementById('dayPlanResult').innerHTML = `
+        <div class="recipe-card" style="border:2px solid #6366f1; margin:15px 0; background:#f5f3ff; position:relative; padding:20px;">
+            <button onclick="closePlanBox()" style="position:absolute; top:10px; right:10px; border:none; background:transparent; cursor:pointer; font-size:18px;">✕</button>
+            <h3 style="margin:0; color:#4338ca;">🎲 90-100g Day Plan</h3>
+            <p style="font-size:0.75rem; color:#6366f1; margin:5px 0;">Rule: Single Meat Variety • Dinner = Lunch Reuse</p>
+            
+            <div style="display:flex; gap:10px; margin: 10px 0;">
+                <span style="background:#e0e7ff; color:#4338ca; padding:4px 8px; border-radius:6px; font-size:0.8rem; font-weight:bold;">🥩 ${pTotal}g P</span>
+                <span style="background:#f0fdf4; color:#166534; padding:4px 8px; border-radius:6px; font-size:0.8rem; font-weight:bold;">🌿 ${fTotal}g F</span>
+            </div>
+            
+            <div style="font-size:0.9rem; line-height:2;">
+                <div onclick="showSpecificRecipe('${b.name}')" style="cursor:pointer;">🍳 <b>B:</b> <span style="text-decoration:underline;">${b.name}</span></div>
+                <div onclick="showSpecificRecipe('${l.name}')" style="cursor:pointer;">☀️ <b>L:</b> <span style="text-decoration:underline;">${l.name}</span></div>
+                <div onclick="showSpecificRecipe('${l.name}')" style="cursor:pointer; color:#64748b;">🌙 <b>D:</b> ${l.name} <small>(Reused Lunch)</small></div>
+                <div onclick="showSpecificRecipe('${s.name}')" style="cursor:pointer;">☕ <b>S:</b> <span style="text-decoration:underline;">${s.name}</span></div>
+            </div>
+            <button onclick="generateDayPlan()" style="width:100%; margin-top:15px; padding:10px; background:#6366f1; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🔄 Reshuffle</button>
+        </div>`;
+}
+
+window.onload = () => { displayRecipes(recipes); };
+        
+        const recipes = [
+  { "name": "Greek Chicken Bowls", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "400 Cal", "details": "Chicken, Cucumber, Feta, Olives, Yogurt. Grill seasoned chicken cubes. (400 Cal)" },
+  { "name": "Italian Chicken Cacciatore", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Italian"], "summary": "380 Cal", "details": "Chicken, Tomato, Bell Pepper, Onion, Garlic. Simmer until the sauce is thick. (380 Cal)" },
+  { "name": "Lemon Ginger Chicken", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "330 Cal", "details": "Chicken, Ginger, Soy Sauce, Honey. Stir-fry chicken strips with ginger. (330 Cal)" },
+  { "name": "Italian Lemon Chicken", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Italian"], "summary": "350 Cal", "details": "Chicken Breast, Lemon, Garlic, Rosemary. Pan-sear and finish with lemon-butter. (350 Cal)" },
+  { "name": "Chicken Leg Roast", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Item"], "summary": "380 Cal", "details": "Chicken Leg Roast (200g) + Rice. (380 Cal)" },
+  { "name": "Chicken Keema", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Item"], "summary": "410 Cal", "details": "Chicken Keema (200g) + Rice. (410 Cal)" },
+  { "name": "Chicken Pulao", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Item"], "summary": "420 Cal", "details": "Chicken Pulao (200g) + Raita. (420 Cal)" },
+  { "name": "Chicken Tweak: Wrap", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "280 Cal", "details": "High protein chicken wrap with veggies. (280 Cal)" },
+  { "name": "Tandoori Chicken", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "210 Cal", "details": "Marinate in yogurt and spices, then air-fry. (210 Cal)" },
+  { "name": "Chicken Tikka (Snack)", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "180 Cal", "details": "Boneless chicken cubes grilled with minimal oil. (180 Cal)" },
+  { "name": "Herb Roasted Chicken", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Chicken Thighs roasted with Thyme and Garlic. (310 Cal)" },
+  { "name": "Chicken Clear Soup", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "120 Cal", "details": "Light broth with shredded chicken and pepper. (120 Cal)" },
+  // --- CHICKEN EXPANSION (15 Items) ---
+  { "name": "Chicken Tikka Masala", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "380 Cal", "details": "Grilled chicken chunks in a spicy, creamy tomato sauce. (380 Cal)" },
+  { "name": "Peri Peri Chicken", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Spicy African-style grilled chicken with bird's eye chili. (310 Cal)" },
+  { "name": "Chicken Saag", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "340 Cal", "details": "Chicken cooked with fresh spinach puree and ginger. (340 Cal)" },
+  { "name": "Mediterranean Chicken Skewers", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "290 Cal", "details": "Skewered chicken with bell peppers, onions, and oregano. (290 Cal)" },
+  { "name": "Chicken Lettuce Wraps", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "220 Cal", "details": "Minced chicken with water chestnuts in lettuce cups. (220 Cal)" },
+  { "name": "Stuffed Chicken Breast", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "350 Cal", "details": "Chicken breast stuffed with spinach and low-fat ricotta. (350 Cal)" },
+  { "name": "Chicken Stew (Kerala Style)", "mealType": "Breakfast", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "310 Cal", "details": "Mild chicken curry with coconut milk and black pepper. (310 Cal)" },
+  { "name": "Garlic Parmesan Roasted Chicken", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "330 Cal", "details": "Oven-roasted chicken with a crispy cheese and herb crust. (330 Cal)" },
+  { "name": "Chicken Jalfrezi", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "360 Cal", "details": "Stir-fried chicken with peppers, onions, and green chilies. (360 Cal)" },
+  { "name": "Chicken Souvlaki", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "310 Cal", "details": "Greek-style grilled meat sticks served with tzatziki. (310 Cal)" },
+  { "name": "Dhaba Style Chicken Curry", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "390 Cal", "details": "Rustic and spicy chicken curry with whole spices. (390 Cal)" },
+  { "name": "Chicken Salad with Grapes", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "270 Cal", "details": "Cold chicken salad with celery and a yogurt dressing. (270 Cal)" },
+  { "name": "Air-Fried Chicken Wings", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "240 Cal", "details": "Crispy wings made with minimal oil and dry rub spices. (240 Cal)" },
+  { "name": "Chicken and Mushroom Soup", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "210 Cal", "details": "Creamy (using yogurt) soup with shredded chicken. (210 Cal)" },
+  { "name": "Chicken Tweak: Pesto Pasta", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "340 Cal", "details": "Plan Tweak: Grilled chicken strips over pesto whole-wheat pasta. (340 Cal)" },
+  { "name": "Chicken Chettinad", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "370 Cal", "details": "Fiery South Indian chicken with roasted coconut and poppy seeds. (370 Cal)" },
+  { "name": "Lemon Pepper Chicken Roast", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Whole chicken legs roasted with cracked pepper and lemon zest. (310 Cal)" },
+  { "name": "Chicken Xacuti", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "380 Cal", "details": "Goan style chicken curry with roasted coconut and spices. (380 Cal)" },
+  { "name": "Grilled Chicken Caesar (No Mayo)", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "290 Cal", "details": "Chicken breast over romaine with yogurt-parmesan dressing. (290 Cal)" },
+  { "name": "Chicken Ghee Roast (Diet)", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "420 Cal", "details": "Spicy Mangalorean chicken roast using minimal ghee. (420 Cal)" },
+  { "name": "Thai Basil Chicken (Pad Krapow)", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Minced chicken with holy basil and bird's eye chili. (310 Cal)" },
+  { "name": "Chicken Keema Wrap", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "260 Cal", "details": "Chicken mince in a whole wheat tortilla. (260 Cal)" },
+  { "name": "Chicken Rezala", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "330 Cal", "details": "White chicken curry with yogurt, cashew paste, and poppy seeds. (330 Cal)" },
+  { "name": "Cajun Spiced Chicken", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "320 Cal", "details": "Zesty blackened chicken breast with bell peppers. (320 Cal)" },
+  { "name": "Chicken Seekh Kebab", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "190 Cal", "details": "Minced chicken skewers grilled with mint and spices. (190 Cal)" },
+  { "name": "Chicken Bone Broth", "mealType": "Breakfast", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "110 Cal", "details": "Slow-simmered chicken bones with turmeric and ginger. (110 Cal)" },
+  { "name": "Hariyali Chicken Kebab", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "200 Cal", "details": "Chicken cubes marinated in cilantro, mint, and green chili. (200 Cal)" },
+  { "name": "Chicken Teriyaki (Low Sugar)", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Chicken thighs glazed with ginger, soy, and stevia. (310 Cal)" },
+  { "name": "Chicken Cafreal", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "350 Cal", "details": "Goan green chicken marinated in coriander and vinegar. (350 Cal)" },
+  { "name": "Pesto Chicken Salad", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Italian"], "summary": "280 Cal", "details": "Cold shredded chicken tossed in fresh basil pesto. (280 Cal)" },
+  { "name": "Chicken & Veggie Frittata", "mealType": "Breakfast", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "240 Cal", "details": "Baked eggs with chicken sausage and spinach. (240 Cal)" },
+  { "name": "Spicy Malvani Chicken", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "380 Cal", "details": "Coastal Maharashtrian chicken curry with Malvani masala. (380 Cal)" },
+  { "name": "Chicken Fajita Bowls", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "340 Cal", "details": "Grilled chicken with onions, peppers, and cauliflower rice. (340 Cal)" },
+  { "name": "Chicken 65 (Air-Fried)", "mealType": "Snack", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "220 Cal", "details": "Spicy, deep-red tempered chicken without the deep frying. (220 Cal)" },
+  { "name": "Butter Chicken (Healthy Tweak)", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "410 Cal", "details": "Made with Greek yogurt instead of heavy cream. (410 Cal)" },
+  { "name": "Chicken Thukpa", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "290 Cal", "details": "Tibetan-style chicken noodle soup with veggies. (290 Cal)" },
+  { "name": "Sesame Chicken Stir-Fry", "mealType": "Lunch", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "320 Cal", "details": "Chicken and broccoli tossed in sesame oil and seeds. (320 Cal)" },
+  { "name": "Chicken Tweak: Burrito Bowl", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "360 Cal", "details": "Chicken over beans, corn, and salsa (no rice). (360 Cal)" },
+  // --- FISH & SEAFOOD (50 ITEMS) ---
+  { "name": "Garlic Butter Shrimp", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "250 Cal", "details": "Shrimp, Garlic, Butter, Lemon. Sauté garlic in butter. (250 Cal)" },
+  { "name": "Baked Fish with Lemon", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "320 Cal", "details": "Fish, Feta, Lemon, Olive Oil. Bake at 200°C. (320 Cal)" },
+  { "name": "Prawn & Fennel Risotto", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Italian"], "summary": "450 Cal", "details": "Shrimp, Rice, Fennel. Cook rice with broth. (450 Cal)" },
+  { "name": "Mediterranean Baked Squid", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "220 Cal", "details": "Squid, Tomato, Garlic. Bake 15-20 mins. (220 Cal)" },
+  { "name": "Fish Tikka Masala", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "340 Cal", "details": "Fish seared in tomato gravy. (340 Cal)" },
+  { "name": "Kerala Squid Roast", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "240 Cal", "details": "Squid, Coconut, Curry Leaves. Roast until dry. (240 Cal)" },
+  { "name": "Butter Garlic Crab", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Crab, Butter, Garlic, Parsley. (280 Cal)" },
+  { "name": "Chettinad Prawn Curry", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "360 Cal", "details": "Shrimp with Coconut and Peppercorns. (360 Cal)" },
+  { "name": "Apollo Fish", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "320 Cal", "details": "Fish, Yogurt, Green Chili, Curry Leaves. (320 Cal)" },
+  { "name": "Malabar Fish Curry", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "360 Cal", "details": "Fish, Tamarind, Coconut Milk. (360 Cal)" },
+  { "name": "Goan Fish Curry", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "350 Cal", "details": "Fish, Coconut, Kokum, Red Chili. (350 Cal)" },
+  { "name": "Tandoori Fish Fry", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "290 Cal", "details": "Fish, Yogurt, Ajwain. Pan-fry. (290 Cal)" },
+  { "name": "Fish Amritsari", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "340 Cal", "details": "Fish, Besan, Ajwain. Coat and fry. (340 Cal)" },
+  { "name": "Prawn Balchao", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "330 Cal", "details": "Shrimp, Vinegar, Dried Chilies. (330 Cal)" },
+  { "name": "Shrimp Scampi", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Shrimp, Garlic, Lemon over Zucchini Noodles. (280 Cal)" },
+  { "name": "Italian Fish Pesto", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Italian"], "summary": "310 Cal", "details": "Fish baked with basil pesto. (310 Cal)" },
+  { "name": "Pan-Seared Salmon", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "420 Cal", "details": "Salmon fillet seared with asparagus. (420 Cal)" },
+  { "name": "Spicy Crab Masala Fry", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "300 Cal", "details": "Crab cooked with fennel and peppercorns. (300 Cal)" },
+  { "name": "Mediterranean Shrimp Skewers", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "210 Cal", "details": "Shrimp and zucchini grilled on skewers. (210 Cal)" },
+  { "name": "Fish Molee", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "350 Cal", "details": "Fish in coconut milk and ginger. (350 Cal)" },
+  { "name": "Garlic Parmesan Shrimp", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Italian"], "summary": "320 Cal", "details": "Baked shrimp with a cheese crust. (320 Cal)" },
+  { "name": "Pepper Squid Rings", "mealType": "Snack", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "230 Cal", "details": "Squid rings with black pepper. (230 Cal)" },
+  { "name": "Grilled Lemon Tilapia", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "270 Cal", "details": "Light Tilapia with lemon parsley butter. (270 Cal)" },
+  { "name": "Tuna Avocado Salad", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Tuna, Avocado, Lime, Cilantro. (310 Cal)" },
+  { "name": "Bengali Mustard Fish", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "340 Cal", "details": "Fish in a pungent mustard paste. (340 Cal)" },
+  { "name": "Crispy Baked Cod", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "290 Cal", "details": "Cod fillets with herb topping. (290 Cal)" },
+  { "name": "Spicy Prawn Vindaloo", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "380 Cal", "details": "Prawns in a fiery Goan vinegar sauce. (380 Cal)" },
+  { "name": "Coconut Lime Shrimp", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Shrimp poached in coconut and lime. (310 Cal)" },
+  { "name": "Sardine Masala", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "260 Cal", "details": "Healthy sardines in spicy tomato base. (260 Cal)" },
+  { "name": "Fish Tacos (Lettuce Wrap)", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "210 Cal", "details": "Flaky fish in lettuce shells. (210 Cal)" },
+  { "name": "Garlic Butter Scallops", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "240 Cal", "details": "Pan-seared scallops with lemon. (240 Cal)" },
+  { "name": "Prawn Ghee Roast", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "410 Cal", "details": "Spicy Mangalorean style prawn roast. (410 Cal)" },
+  { "name": "Steamed Sea Bass", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Sea bass with ginger and soy. (280 Cal)" },
+  { "name": "Clam Masala", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "290 Cal", "details": "Fresh clams with coconut-spice mix. (290 Cal)" },
+  { "name": "Shrimp Cocktail (Diet)", "mealType": "Snack", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "150 Cal", "details": "Chilled shrimp with spicy sauce. (150 Cal)" },
+  { "name": "Fish Kebabs", "mealType": "Snack", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "220 Cal", "details": "Minced fish patties with herbs. (220 Cal)" },
+  { "name": "Grilled Lobster Tail", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "350 Cal", "details": "Lobster tail with garlic butter. (350 Cal)" },
+  { "name": "Shrimp Tweak: Cauli Rice", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "190 Cal", "details": "Shrimp stir-fry over cauliflower rice. (190 Cal)" },
+  { "name": "Steamed Rohu (Bengali)", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "310 Cal", "details": "Rohu fish with mustard paste. (310 Cal)" },
+  { "name": "Lemon Garlic Basa", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "260 Cal", "details": "Basa fillets baked with garlic. (260 Cal)" },
+  { "name": "Spicy Tuna Melt (Low Carb)", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "290 Cal", "details": "Tuna mixed with Greek yogurt. (290 Cal)" },
+  { "name": "Tandoori Pomfret", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "340 Cal", "details": "Pomfret marinated in tandoori masala. (340 Cal)" },
+  { "name": "Salmon Tikka", "mealType": "Snack", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "320 Cal", "details": "Salmon marinated in ginger-garlic. (320 Cal)" },
+  { "name": "Fish Moilee Tweak", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "280 Cal", "details": "Coconut fish curry over cauli rice. (280 Cal)" },
+  { "name": "Crispy Air-Fried Prawns", "mealType": "Snack", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "190 Cal", "details": "Prawns air-fried until golden. (190 Cal)" },
+  { "name": "Mediterranean Fish Stew", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "White fish in tomato-olive broth. (310 Cal)" },
+  { "name": "Sesame Crusted Tuna", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "330 Cal", "details": "Tuna with black and white sesame crust. (330 Cal)" },
+  { "name": "Prawn Salad with Mango", "mealType": "Lunch", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "260 Cal", "details": "Boiled prawns with mango and lime. (260 Cal)" },
+  { "name": "Baked Scallops", "mealType": "Snack", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "180 Cal", "details": "Scallops with a touch of herb butter. (180 Cal)" },
+  { "name": "Seafood Paella (Low Carb)", "mealType": "Dinner", "proteinSource": "Fish", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "380 Cal", "details": "Mixed seafood with cauliflower rice. (380 Cal)" },
+  // --- MUTTON (20 ITEMS) ---
+  { "name": "Mutton Sukka", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "450 Cal", "details": "Dry-roasted mutton with coconut. (450 Cal)" },
+  { "name": "Mutton Pepper Soup", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "220 Cal", "details": "Spicy clear broth with black pepper. (220 Cal)" },
+  { "name": "Mutton Keema Matar", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "390 Cal", "details": "Mutton mince cooked with peas. (390 Cal)" },
+  { "name": "Mutton Stew", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "410 Cal", "details": "Mutton simmered in coconut milk with potatoes. (410 Cal)" },
+  { "name": "Mutton Rogan Josh", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "440 Cal", "details": "Traditional kashmiri mutton in yogurt gravy. (440 Cal)" },
+  { "name": "Railway Mutton Curry", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "420 Cal", "details": "Classic thin gravy mutton with potatoes. (420 Cal)" },
+  { "name": "Mutton Chops Fry", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "380 Cal", "details": "Pan-fried marinated chops with curry leaves. (380 Cal)" },
+  { "name": "Bhurani Mutton", "mealType": "Dinner", "proteinSource": "Mutton", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "450 Cal", "details": "Slow-cooked meat with garlic-infused yogurt. (450 Cal)" },
+
+  // --- EGGS ---
+  { "name": "Egg Roast (Kerala Style)", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "280 Cal", "details": "Hard-boiled eggs in a thick onion-tomato roast. (280 Cal)" },
+  { "name": "Egg Bhurji (Parsi Style)", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "300 Cal", "details": "Spiced scrambled eggs with chilies and coriander. (300 Cal)" },
+  { "name": "Spinach & Feta Omelette", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "240 Cal", "details": "Two eggs, fresh spinach, and crumbled feta. (240 Cal)" },
+  { "name": "Egg Masala Curry", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "310 Cal", "details": "Boiled eggs in a spicy dhaba-style gravy. (310 Cal)" },
+  { "name": "Poached Eggs on Toast", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "290 Cal", "details": "Two poached eggs over whole grain toast. (290 Cal)" },
+  { "name": "Shakshuka", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "320 Cal", "details": "Eggs poached in a simmering tomato-pepper sauce. (320 Cal)" },
+  { "name": "Egg White Salad", "mealType": "Snack", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "150 Cal", "details": "Boiled egg whites with light mustard dressing. (150 Cal)" },
+
+  // --- PANEER ---
+  { "name": "Palak Paneer", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "320 Cal", "details": "Paneer cubes in a spiced spinach puree. (320 Cal)" },
+  { "name": "Paneer Tikka", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Grilled paneer marinated in spiced yogurt. (310 Cal)" },
+  { "name": "Paneer Butter Masala", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "420 Cal", "details": "Cottage cheese in a creamy tomato-cashew gravy. (420 Cal)" },
+  { "name": "Matar Paneer", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "340 Cal", "details": "Classic peas and paneer curry. (340 Cal)" },
+  { "name": "Kadai Paneer", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "360 Cal", "details": "Paneer cooked with bell peppers and kadai masala. (360 Cal)" },
+  { "name": "Paneer Bhurji", "mealType": "Breakfast", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "290 Cal", "details": "Crumbled paneer sautéed with onions and tomatoes. (290 Cal)" },
+  { "name": "Paneer Steak", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Large paneer slabs grilled with herbs and garlic. (310 Cal)" },
+  { "name": "Greek Paneer Salad", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Greek"], "summary": "280 Cal", "details": "Paneer cubes, olives, cucumber, and lemon dressing. (280 Cal)" },
+  // --- LENTILS & SOYA ---
+  { "name": "Dal Tadka", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "210 Cal", "details": "Yellow lentils tempered with cumin, garlic, and dried red chilies. (210 Cal)" },
+  { "name": "Moong Dal Chilla", "mealType": "Breakfast", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "250 Cal", "details": "Savory pancakes made from ground moong dal and ginger. (250 Cal)" },
+  { "name": "Dal Makhani (Healthy)", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "320 Cal", "details": "Slow-cooked black lentils with minimal cream and butter. (320 Cal)" },
+  { "name": "Soya Chunks Stir-Fry", "mealType": "Lunch", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "280 Cal", "details": "Protein-rich soya chunks tossed with bell peppers and onions. (280 Cal)" },
+  { "name": "Soya Keema", "mealType": "Dinner", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Minced soya granules cooked like traditional keema. (310 Cal)" },
+  { "name": "Chana Masala", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "290 Cal", "details": "Chickpeas in a spicy and tangy tomato-based gravy. (290 Cal)" },
+  { "name": "Rajma Curry", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Red kidney beans slow-cooked in a thick onion gravy. (310 Cal)" },
+
+  // --- VEGETABLES & SIDES ---
+  { "name": "Mixed Veg Kadai", "mealType": "Lunch", "proteinSource": "Other", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "240 Cal", "details": "Seasonal vegetables cooked in a spicy kadai masala. (240 Cal)" },
+  { "name": "Baingan Bharta", "mealType": "Dinner", "proteinSource": "Other", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "180 Cal", "details": "Smoky roasted eggplant mashed with onions and tomatoes. (180 Cal)" },
+  { "name": "Bhindi Do Pyaza", "mealType": "Lunch", "proteinSource": "Other", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "190 Cal", "details": "Okra cooked with double the onions and spices. (190 Cal)" },
+  { "name": "Roasted Cauliflower Steaks", "mealType": "Dinner", "proteinSource": "Other", "vegType": "Veg", "tags": ["Continental"], "summary": "160 Cal", "details": "Thick slices of cauliflower oven-roasted with paprika. (160 Cal)" },
+  { "name": "Greek Salad", "mealType": "Lunch", "proteinSource": "Other", "vegType": "Veg", "tags": ["Greek"], "summary": "210 Cal", "details": "Cucumber, tomato, olives, and red onion with vinaigrette. (210 Cal)" },
+  { "name": "Vegetable Clear Soup", "mealType": "Snack", "proteinSource": "Other", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "90 Cal", "details": "Light vegetable broth with carrots and beans. (90 Cal)" },
+  { "name": "Zucchini Noodles with Pesto", "mealType": "Dinner", "proteinSource": "Other", "vegType": "Veg", "tags": ["Italian"], "summary": "180 Cal", "details": "Spiralized zucchini tossed in a fresh basil pesto sauce. (180 Cal)" },
+   // --- PANEER & TOFU (High Protein Veg) ---
+  { "name": "Paneer Tikka Masala", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "380 Cal", "details": "Grilled paneer cubes in a spiced tomato gravy. (380 Cal)" },
+  { "name": "Palak Paneer (Low Cream)", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "320 Cal", "details": "Fresh spinach puree with lightly sautéed paneer. (320 Cal)" },
+  { "name": "Paneer Bhurji", "mealType": "Breakfast", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "290 Cal", "details": "Scrambled paneer with onions, tomatoes, and turmeric. (290 Cal)" },
+  { "name": "Grilled Tofu Steaks", "mealType": "Dinner", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "260 Cal", "details": "Firm tofu marinated in soy, ginger, and garlic. (260 Cal)" },
+  { "name": "Kadai Paneer", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "350 Cal", "details": "Paneer tossed with bell peppers and freshly ground spices. (350 Cal)" },
+  { "name": "Tofu Stir-Fry with Broccoli", "mealType": "Dinner", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "240 Cal", "details": "Crispy tofu cubes with snap peas and sesame oil. (240 Cal)" },
+  { "name": "Mutter Paneer (Diet)", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Green peas and paneer in a light onion-tomato base. (310 Cal)" },
+  { "name": "Paneer Steak with Herbs", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Continental"], "summary": "330 Cal", "details": "Large paneer slabs grilled with rosemary and thyme. (330 Cal)" },
+  { "name": "Szechuan Tofu", "mealType": "Lunch", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Spicy stir-fried tofu with celery and dried red chilies. (280 Cal)" },
+  { "name": "Paneer & Corn Salad", "mealType": "Snack", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "210 Cal", "details": "Paneer cubes with boiled corn, lime, and chaat masala. (210 Cal)" },
+
+  // --- LENTILS, BEANS & SOYA ---
+  { "name": "Soya Chunk Curry", "mealType": "Lunch", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "290 Cal", "details": "High-protein soya chunks in a classic curry base. (290 Cal)" },
+  { "name": "Rajma Masala (Red Kidney Beans)", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "340 Cal", "details": "Slow-cooked kidney beans in a thick tomato gravy. (340 Cal)" },
+  { "name": "Dal Tadka (Yellow Lentils)", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "220 Cal", "details": "Yellow moong dal tempered with cumin and garlic. (220 Cal)" },
+  { "name": "Chana Masala (Chickpeas)", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Spicy chickpeas with amchoor and ginger juliennes. (310 Cal)" },
+  { "name": "Black Bean Tacos", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Beans with salsa and avocado in corn tortillas. (280 Cal)" },
+  { "name": "Soya Bhurji", "mealType": "Breakfast", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "250 Cal", "details": "Minced soya granules sautéed with green peas. (250 Cal)" },
+  { "name": "Dal Makhani (Healthy Version)", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "320 Cal", "details": "Black lentils cooked slowly without heavy cream. (320 Cal)" },
+  { "name": "Roasted Chickpea Snack", "mealType": "Snack", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "160 Cal", "details": "Crunchy oven-roasted kabuli chana with paprika. (160 Cal)" },
+  { "name": "Moong Dal Cheela", "mealType": "Breakfast", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "210 Cal", "details": "Savory pancakes made from soaked yellow lentil paste. (210 Cal)" },
+  { "name": "Lentil Soup (Mediterranean)", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Continental"], "summary": "190 Cal", "details": "Brown lentils with carrots, celery, and lemon. (190 Cal)" },
+
+  // --- QUINOA, MILLETS & GRAINS ---
+  { "name": "Quinoa Upma", "mealType": "Breakfast", "proteinSource": "Other", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "240 Cal", "details": "Quinoa cooked with mustard seeds, curry leaves, and veggies. (240 Cal)" },
+  { "name": "Bajra Khichdi", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "280 Cal", "details": "Pearl millet and moong dal slow-cooked together. (280 Cal)" },
+  { "name": "Buckwheat (Kuttu) Pancakes", "mealType": "Breakfast", "proteinSource": "Other", "vegType": "Veg", "tags": ["Continental"], "summary": "220 Cal", "details": "Gluten-free pancakes served with Greek yogurt. (220 Cal)" },
+  { "name": "Oats Idli", "mealType": "Breakfast", "proteinSource": "Other", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "180 Cal", "details": "Steamed idlis made with powdered oats and yogurt. (180 Cal)" },
+  { "name": "Veggie Quinoa Pulao", "mealType": "Lunch", "proteinSource": "Other", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Fluffy quinoa tossed with seasonal vegetables. (310 Cal)" },
+  // --- VEG COMPLETION (Paneer, Tempeh & Gourmet) ---
+  { "name": "Achari Paneer Tikka", "mealType": "Snack", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "240 Cal", "details": "Paneer marinated in pickling spices and yogurt. (240 Cal)" },
+  { "name": "Tempeh Stir-Fry", "mealType": "Lunch", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "290 Cal", "details": "Fermented soy tempeh with snap peas and a light ginger glaze. (290 Cal)" },
+  { "name": "Paneer Jalfrezi", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "340 Cal", "details": "Paneer strips sautéed with julienned peppers and onions. (340 Cal)" },
+  { "name": "Tofu Scramble", "mealType": "Breakfast", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "220 Cal", "details": "Crumbled tofu with nutritional yeast, turmeric, and kale. (220 Cal)" },
+  { "name": "Malai Kofta (Healthy Tweak)", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "380 Cal", "details": "Baked paneer-potato balls in a tomato-cashew gravy (no cream). (380 Cal)" },
+  { "name": "Pesto Tofu Skewers", "mealType": "Snack", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Italian"], "summary": "190 Cal", "details": "Tofu cubes grilled with fresh basil pesto. (190 Cal)" },
+  { "name": "Paneer Pasanda (Low Fat)", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "360 Cal", "details": "Stuffed paneer sandwiches in a mild yogurt-based sauce. (360 Cal)" },
+
+  // --- HEARTY LENTILS & GRAINS ---
+  { "name": "Sprouted Moong Salad", "mealType": "Snack", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "140 Cal", "details": "Steamed sprouts with pomegranate, onion, and lime juice. (140 Cal)" },
+  { "name": "Chickpea Shakshuka (Veg)", "mealType": "Breakfast", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Continental"], "summary": "270 Cal", "details": "Chickpeas simmered in a spicy tomato and bell pepper sauce. (270 Cal)" },
+  { "name": "Whole Wheat Veg Pasta", "mealType": "Dinner", "proteinSource": "Other", "vegType": "Veg", "tags": ["Italian"], "summary": "320 Cal", "details": "Pasta with broccoli, zucchini, and a light garlic-olive oil sauce. (320 Cal)" },
+  { "name": "Mushroom Risotto (Oats Style)", "mealType": "Dinner", "proteinSource": "Other", "vegType": "Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Creamy oats cooked like risotto with sautéed mushrooms. (280 Cal)" },
+  { "name": "Lobiya Curry (Black Eyed Peas)", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "310 Cal", "details": "Black-eyed peas in a tangy tomato and cumin gravy. (310 Cal)" },
+  { "name": "Vegetable Khichdi", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "260 Cal", "details": "Comforting mix of rice, lentils, and mixed garden vegetables. (260 Cal)" },
+  { "name": "Greek Salad with Extra Feta", "mealType": "Lunch", "proteinSource": "Other", "vegType": "Veg", "tags": ["Greek"], "summary": "240 Cal", "details": "Cucumber, tomato, olives, and feta with dried oregano. (240 Cal)" },
+
+  // --- SOYA & TWEAKS ---
+  { "name": "Soya Chunk Pulao", "mealType": "Lunch", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "330 Cal", "details": "High-protein soya chunks cooked with basmati rice. (330 Cal)" },
+  { "name": "Crispy Air-Fried Soya", "mealType": "Snack", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "180 Cal", "details": "Marinated soya chunks air-fried until crunchy. (180 Cal)" },
+  { "name": "Tofu Lettuce Wraps", "mealType": "Snack", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "210 Cal", "details": "Minced tofu with water chestnuts and soy sauce in lettuce. (210 Cal)" },
+  { "name": "Paneer Tweak: Cauli Rice", "mealType": "Dinner", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Plan-Tweak"], "summary": "250 Cal", "details": "Plan Tweak: Paneer bhurji served over cauliflower rice. (250 Cal)" },
+  { "name": "Soya Tweak: Zucchini Noodles", "mealType": "Dinner", "proteinSource": "Soya", "vegType": "Veg", "tags": ["Plan-Tweak"], "summary": "220 Cal", "details": "Soya mince sauce served over zoodles. (220 Cal)" },
+  { "name": "Roasted Makhana (Fox Nuts)", "mealType": "Snack", "proteinSource": "Other", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "120 Cal", "details": "Low-calorie crunchy lotus seeds roasted with turmeric. (120 Cal)" },
+  { "name": "Barley & Bean Soup", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Continental"], "summary": "230 Cal", "details": "Hearty barley soup with mixed kidney beans and herbs. (230 Cal)" },
+  { "name": "Adzuki Bean Curry", "mealType": "Lunch", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Indian Veg"], "summary": "290 Cal", "details": "Small red beans cooked in a ginger-heavy gravy. (290 Cal)" },
+  { "name": "Stuffed Bell Peppers (Tofu)", "mealType": "Dinner", "proteinSource": "Tofu", "vegType": "Veg", "tags": ["Continental"], "summary": "270 Cal", "details": "Bell peppers stuffed with spiced tofu and baked. (270 Cal)" },
+  { "name": "Paneer & Spinach Wrap", "mealType": "Lunch", "proteinSource": "Paneer", "vegType": "Veg", "tags": ["Healthy-Snack"], "summary": "310 Cal", "details": "Whole wheat wrap with paneer, spinach, and mint chutney. (310 Cal)" },
+  { "name": "Sweet Potato & Chickpea Curry", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Continental"], "summary": "340 Cal", "details": "Warm curry with chickpeas, sweet potato, and spinach. (340 Cal)" },
+  // --- FINAL TWEAKS ---
+  { "name": "Ragi Tweak: Vegetable Soup", "mealType": "Dinner", "proteinSource": "Other", "vegType": "Veg", "tags": ["Plan-Tweak"], "summary": "180 Cal", "details": "Plan Tweak: Ragi flour used to thicken a hearty vegetable soup. (180 Cal)" },
+  { "name": "Oats Tweak: Porridge", "mealType": "Breakfast", "proteinSource": "Other", "vegType": "Veg", "tags": ["Plan-Tweak"], "summary": "220 Cal", "details": "Plan Tweak: Savory oats with grated carrots and peas. (220 Cal)" },
+  { "name": "Keema Tweak: Stuffed Roti", "mealType": "Dinner", "proteinSource": "Chicken", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "320 Cal", "details": "Plan Tweak: Chicken keema stuffed into a wheat roti. (320 Cal)" },
+  { "name": "Rajma Tweak: Cutlets", "mealType": "Dinner", "proteinSource": "Lentils", "vegType": "Veg", "tags": ["Plan-Tweak"], "summary": "260 Cal", "details": "Plan Tweak: Mashed rajma patties grilled with minimal oil. (260 Cal)" },
+  // --- EGGS (25 ITEMS) ---
+  { "name": "Classic Boiled Eggs", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "140 Cal", "details": "Two hard-boiled eggs with a pinch of black pepper. (140 Cal)" },
+  { "name": "Egg Bhurji (Masala Scramble)", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "220 Cal", "details": "Three eggs scrambled with onions, chilies, and turmeric. (220 Cal)" },
+  { "name": "Spinach & Feta Omelet", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "240 Cal", "details": "Two-egg omelet folded over fresh spinach and feta cheese. (240 Cal)" },
+  { "name": "Egg Curry (Dhaba Style)", "mealType": "Lunch", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "310 Cal", "details": "Boiled eggs simmered in a spicy onion-tomato gravy. (310 Cal)" },
+  { "name": "Shakshuka (Eggs in Purgatory)", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Eggs poached in a simmering tomato and bell pepper sauce. (280 Cal)" },
+  { "name": "Egg White Frittata", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "190 Cal", "details": "Baked egg whites with mushrooms, peppers, and herbs. (190 Cal)" },
+  { "name": "Deviled Eggs (Healthy)", "mealType": "Snack", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "160 Cal", "details": "Egg yolks mashed with Greek yogurt and mustard. (160 Cal)" },
+  { "name": "Egg & Avocado Toast", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "340 Cal", "details": "Poached egg on whole-wheat toast with mashed avocado. (340 Cal)" },
+  { "name": "Kerala Egg Roast", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "260 Cal", "details": "Hard-boiled eggs coated in a dry, spicy onion masala. (260 Cal)" },
+  { "name": "Egg Fried Rice (Brown Rice)", "mealType": "Lunch", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "380 Cal", "details": "Scrambled eggs tossed with brown rice and spring onions. (380 Cal)" },
+  { "name": "Mediterranean Egg Salad", "mealType": "Lunch", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "290 Cal", "details": "Boiled eggs, cucumbers, tomatoes, and olives with lemon. (290 Cal)" },
+  { "name": "Poached Eggs on Asparagus", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "210 Cal", "details": "Two eggs poached perfectly over steamed asparagus spears. (210 Cal)" },
+  { "name": "Egg & Cheese Wrap", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "310 Cal", "details": "Whole wheat wrap with scrambled eggs and low-fat cheddar. (310 Cal)" },
+  { "name": "Turkish Eggs (Cilbir)", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "270 Cal", "details": "Poached eggs served over garlic-flavored Greek yogurt. (270 Cal)" },
+  { "name": "Egg Muffins (Baked)", "mealType": "Snack", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "180 Cal", "details": "Mini egg bites baked with broccoli and cheese. (180 Cal)" },
+  { "name": "Spicy Egg Vindaloo", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "330 Cal", "details": "Boiled eggs in a sharp, vinegary Goan spice paste. (330 Cal)" },
+  { "name": "Cloud Eggs", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "150 Cal", "details": "Whipped egg whites baked with the yolk in the center. (150 Cal)" },
+  { "name": "Egg Soup (Drop Soup)", "mealType": "Snack", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "130 Cal", "details": "Clear broth with whisked egg ribbons and ginger. (130 Cal)" },
+  { "name": "Baked Eggs in Avocado", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "320 Cal", "details": "Eggs cracked into avocado halves and baked. (320 Cal)" },
+  { "name": "Mushroom Egg Foo Young", "mealType": "Lunch", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Chinese-style omelet with sprouts and mushrooms. (280 Cal)" },
+  { "name": "Egg Keema (Minced Egg)", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "240 Cal", "details": "Grated boiled eggs cooked like a spicy mince. (240 Cal)" },
+  { "name": "Scotch Eggs (Air-Fried)", "mealType": "Snack", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "310 Cal", "details": "Boiled eggs wrapped in lean chicken mince and air-fried. (310 Cal)" },
+  { "name": "French Omelet (Herb)", "mealType": "Breakfast", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "210 Cal", "details": "Silky smooth omelet with chives and parsley. (210 Cal)" },
+  { "name": "Egg Tweak: Cauli Fried Rice", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "230 Cal", "details": "Scrambled eggs with cauliflower rice and soy sauce. (230 Cal)" },
+  { "name": "Zucchini Egg Boats", "mealType": "Dinner", "proteinSource": "Egg", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "240 Cal", "details": "Hollowed zucchini filled with eggs and baked. (240 Cal)" },
+
+  // --- MUTTON / RED MEAT (23 ITEMS) ---
+  { "name": "Mutton Rogan Josh (Lean)", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "410 Cal", "details": "Kashmiri mutton curry with ginger and fennel. (410 Cal)" },
+  { "name": "Grilled Lamb Chops", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "380 Cal", "details": "Lamb chops with mint sauce and grilled veggies. (380 Cal)" },
+  { "name": "Mutton Shami Kebab", "mealType": "Snack", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "190 Cal", "details": "Silky minced mutton patties with chana dal. (190 Cal)" },
+  { "name": "Bhuna Gosht (Low Oil)", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "440 Cal", "details": "Slow-cooked mutton in a thick onion-tomato gravy. (440 Cal)" },
+  { "name": "Mutton Bone Broth", "mealType": "Breakfast", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Healthy-Snack"], "summary": "120 Cal", "details": "Nutrient-dense soup from slow-simmered bones. (120 Cal)" },
+  { "name": "Spicy Lamb Stir-Fry", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "350 Cal", "details": "Thin strips of lamb with peppers and soy sauce. (350 Cal)" },
+  { "name": "Hyderabadi Mutton Dalcha", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "390 Cal", "details": "Mutton cooked with chana dal and bottle gourd. (390 Cal)" },
+  { "name": "Mutton Galouti Kebab", "mealType": "Snack", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "210 Cal", "details": "Melt-in-mouth mutton patties from Lucknow. (210 Cal)" },
+  { "name": "Lamb Stew with Root Veggies", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "370 Cal", "details": "Lean lamb chunks simmered with carrots and potatoes. (370 Cal)" },
+  { "name": "Mutton Pepper Fry", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "420 Cal", "details": "South Indian dry mutton roast with heavy black pepper. (420 Cal)" },
+  { "name": "Grilled Steak (Lean Cut)", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "450 Cal", "details": "Lean beef or lamb steak with garlic butter. (450 Cal)" },
+  { "name": "Mutton Paya Soup", "mealType": "Breakfast", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "310 Cal", "details": "Traditional soup made from trotters; high in collagen. (310 Cal)" },
+  { "name": "Keema Kaleji", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "380 Cal", "details": "Minced mutton and liver cooked with spices. (380 Cal)" },
+  { "name": "Greek Lamb Souvlaki", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Greek"], "summary": "340 Cal", "details": "Lamb skewers with lemon, garlic, and oregano. (340 Cal)" },
+  { "name": "Mutton Rara", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "460 Cal", "details": "Mutton pieces cooked in a rich mutton-mince gravy. (460 Cal)" },
+  { "name": "Lamb & Quinoa Pilaf", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "410 Cal", "details": "Lean lamb bits cooked with fluffy quinoa. (410 Cal)" },
+  { "name": "Railway Mutton Curry", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "430 Cal", "details": "Heritage Anglo-Indian mutton curry with potatoes. (430 Cal)" },
+  { "name": "Mutton Kofta Curry", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "390 Cal", "details": "Mutton meatballs simmered in a yogurt gravy. (390 Cal)" },
+  { "name": "Thai Red Curry (Lamb)", "mealType": "Lunch", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "420 Cal", "details": "Lamb in coconut milk with bamboo shoots and basil. (420 Cal)" },
+  { "name": "Slow-Cooked Pot Roast", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "380 Cal", "details": "Tender meat slow-roasted with red wine and thyme. (380 Cal)" },
+  { "name": "Mutton Tweak: Zucchini Boats", "mealType": "Dinner", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Plan-Tweak"], "summary": "310 Cal", "details": "Minced mutton keema stuffed in zucchini. (310 Cal)" },
+  { "name": "Nalli Nihari (Lean Tweak)", "mealType": "Breakfast", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Indian NV"], "summary": "440 Cal", "details": "Slow-cooked mutton shank in a rich broth. (440 Cal)" },
+  { "name": "Lamb Lettuce Wraps", "mealType": "Snack", "proteinSource": "Mutton/Meat", "vegType": "Non-Veg", "tags": ["Continental"], "summary": "280 Cal", "details": "Spiced ground lamb in crisp lettuce cups. (280 Cal)" },
+  // Add these to your main 236 recipes list
+{
+    name: "Adai",
+    mealType: "Breakfast",
+    proteinSource: "Lentils",
+    vegType: "Veg",
+    tags: ["High Fiber", "Tamil Traditional"],
+    summary: "340 Cal",
+    details: "Soaked rice and mixed dals ground with red chilies, ginger, and hing. Spread thick on tawa and cook with oil until crisp."
+},
+{
+    name: "ABC Smoothie",
+    mealType: "Snack",
+    proteinSource: "Other",
+    vegType: "Veg",
+    tags: ["Fresh", "Quick"],
+    summary: "220 Cal",
+    details: "Blend 1 Apple, 1/2 Beetroot, and 1 Carrot with water. Drink unstrained for maximum fiber."
+},
+{
+    name: "Kamba Koozh",
+    mealType: "Breakfast",
+    proteinSource: "Other",
+    vegType: "Veg",
+    tags: ["Summer Special", "Millet"],
+    summary: "210 Cal",
+    details: "Pearl millet porridge mixed with buttermilk, small onions, and curry leaves. Excellent for cooling the body."
+},
+{
+    name: "Horse Gram Kanji",
+    mealType: "Lunch",
+    proteinSource: "Lentils",
+    vegType: "Veg",
+    tags: ["Weight Loss", "Traditional"],
+    summary: "220 Cal",
+    details: "Kollu (Horse Gram) porridge. High in iron and protein."
+},
+{
+    name: "Pesarattu",
+    mealType: "Breakfast",
+    proteinSource: "Lentils",
+    vegType: "Veg",
+    tags: ["High Protein", "Moong Dal"],
+    summary: "320 Cal",
+    details: "Green moong dal crepe served with ginger chutney."
+},
+{
+    name: "Soya Chunks Stir Fry",
+    mealType: "Lunch",
+    proteinSource: "Tofu/Soya",
+    vegType: "Veg",
+    tags: ["High Protein", "Vegan"],
+    summary: "290 Cal",
+    details: "Spiced soya nuggets stir-fried with onions and bell peppers."
+},
+{
+    name: "Roasted Makhana",
+    mealType: "Snack",
+    proteinSource: "Other",
+    vegType: "Veg",
+    tags: ["Light", "Low Calorie"],
+    summary: "180 Cal",
+    details: "Fox nuts dry-roasted with turmeric and salt."
+},
+{ 
+        "name": "Sprouted Moong Salad", 
+        "mealType": "Lunch", 
+        "proteinSource": "Lentils", 
+        "vegType": "Veg", 
+        "tags": ["Salad", "High Fiber"], 
+        "summary": "280 Cal", 
+        "details": "Sprouted Moong, Pomegranate, Cucumber, Chaat Masala, Lemon. Toss all fresh ingredients. (280 Cal | 12g P)" 
+    },
+    { 
+        "name": "Chickpea & Paneer Sundal", 
+        "mealType": "Snack", 
+        "proteinSource": "Paneer", 
+        "vegType": "Veg", 
+        "tags": ["Salad", "South Indian"], 
+        "summary": "220 Cal", 
+        "details": "Boiled Chickpeas, Paneer cubes, Curry leaves, Mustard seeds, Coconut. (220 Cal | 14g P)" 
+    },
+    { 
+        "name": "Egg & Spinach Power Salad", 
+        "mealType": "Breakfast", 
+        "proteinSource": "Egg", 
+        "vegType": "Non-Veg", 
+        "tags": ["Salad", "Light"], 
+        "summary": "310 Cal", 
+        "details": "3 Boiled Eggs, Spinach, Cherry Tomatoes, Walnuts, Balsamic. (310 Cal | 18g P)" 
+    },
+    { 
+        "name": "Peanut & Mango Kachumber", 
+        "mealType": "Snack", 
+        "proteinSource": "Other", 
+        "vegType": "Veg", 
+        "tags": ["Salad", "Crunchy"], 
+        "summary": "180 Cal", 
+        "details": "Roasted Peanuts, Raw Mango, Onion, Tomato, Cilantro, Black Salt. (180 Cal | 8g P)" 
+    },
+    { 
+        "name": "Chicken Curry Wrap", 
+        "mealType": "Dinner", 
+        "proteinSource": "Chicken", 
+        "vegType": "Non-Veg", 
+        "tags": ["Prep-Friendly"], 
+        "summary": "420 Cal", 
+        "details": "Leftover Chicken Curry, Whole Wheat Wrap, Pickled Onions, Mint Chutney. (420 Cal | 32g P)" 
+    },
+    { 
+        "name": "Pepper Rasam & Idli", 
+        "mealType": "Dinner", 
+        "proteinSource": "Lentils", 
+        "vegType": "Veg", 
+        "tags": ["Comfort"], 
+        "summary": "290 Cal", 
+        "details": "Tamarind, Black Pepper, Toor Dal water, 3 Idlis. High digestion aid. (290 Cal | 10g P)" 
+    },
+    { 
+        "name": "Dal Paratha Roll", 
+        "mealType": "Dinner", 
+        "proteinSource": "Lentils", 
+        "vegType": "Veg", 
+        "tags": ["Prep-Friendly"], 
+        "summary": "340 Cal", 
+        "details": "Thick Toor Dal, Whole wheat dough, Green chili. Roll dal inside paratha. (340 Cal | 12g P)" 
+    },
+    {
+    name: "Classic Indian Kachumber",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Crunchy onion-tomato-cucumber staple.",
+    details: "Finely chop 1 onion, 1 cucumber, and 2 tomatoes. Toss with fresh coriander, green chilies, lemon juice, and a pinch of black salt. Best served chilled.",
+    tags: ["Salad", "Raw", "Fiber"]
+},
+{
+    name: "Sprouted Moong Power Bowl",
+    mealType: "Side",
+    proteinSource: "Lentils",
+    vegType: "Veg",
+    summary: "High-fiber sprout salad (12g Protein).",
+    details: "1 cup steamed moong sprouts, chopped carrots, and pomegranate seeds. Season with chaat masala and lime. Pairs perfectly with Grilled Chicken.",
+    tags: ["Salad", "High-Protein", "Fiber"]
+},
+{
+    name: "Creamy Flax-Curd Raita",
+    mealType: "Side",
+    proteinSource: "Dairy",
+    vegType: "Veg",
+    summary: "Digestive aid with healthy fats.",
+    details: "Whisk 1 cup low-fat curd with grated cucumber and 1 tbsp roasted flaxseed powder (Alsi). Season with roasted cumin powder and salt.",
+    tags: ["Salad", "Digestive", "Healthy Fats"]
+},
+{
+    name: "Peanut & Raw Cabbage Crunch",
+    mealType: "Side",
+    proteinSource: "Nuts",
+    vegType: "Veg",
+    summary: "High-crunch salad with healthy fats.",
+    details: "Shredded purple or white cabbage, grated carrots, and 2 tbsp roasted crushed peanuts. Dressing: Lemon, honey, and a drop of sesame oil.",
+    tags: ["Salad", "Crunchy", "Keto-friendly"]
+},
+{
+    name: "Roasted Chana & Onion Salad",
+    mealType: "Snack",
+    proteinSource: "Chickpeas",
+    vegType: "Veg",
+    summary: "Travel-friendly dry salad (10g Protein).",
+    details: "1 cup roasted black chana mixed with chopped onions, tomatoes, and plenty of lemon juice. High fiber and keeps you full.",
+    tags: ["Salad", "Dry", "Travel"]
+},
+{
+    name: "Beetroot & Carrot Glow Salad",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Iron-rich fresh root salad.",
+    details: "Grate 1 beetroot and 2 carrots. Mix with a tempering of mustard seeds and curry leaves in 1 tsp oil. Top with fresh coconut.",
+    tags: ["Salad", "Iron-rich", "Cooked-Raw"]
+},
+{
+    name: "Chickpea (Chole) Mediterranean",
+    mealType: "Lunch",
+    proteinSource: "Chickpeas",
+    vegType: "Veg",
+    summary: "Full meal salad (15g Protein).",
+    details: "Boiled chickpeas, olives (optional), bell peppers, and feta cheese (or paneer cubes). Toss in olive oil and oregano dressing.",
+    tags: ["Salad", "Full Meal", "Mediterranean"]
+},
+{
+    name: "Spicy Radish (Mooli) Laccha",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Pungent, digestive winter salad.",
+    details: "Grated white radish mixed with salt, red chili powder, and lots of lemon. Let sit for 5 mins before eating to soften.",
+    tags: ["Salad", "Digestive", "Traditional"]
+},
+{
+    name: "Fruit & Nut Spinach Toss",
+    mealType: "Side",
+    proteinSource: "Nuts",
+    vegType: "Veg",
+    summary: "Sweet and savory salad.",
+    details: "Baby spinach leaves, apple slices, and 5 soaked almonds. Dressing: Balsamic vinegar or simple lemon-pepper.",
+    tags: ["Salad", "Antioxidant", "Light"]
+},
+{
+    name: "Minty Watermelon & Paneer",
+    mealType: "Snack",
+    proteinSource: "Paneer",
+    vegType: "Veg",
+    summary: "Hydrating summer salad.",
+    details: "Chilled watermelon cubes topped with crumbled fresh paneer and torn mint leaves. A pinch of black pepper to finish.",
+    tags: ["Salad", "Hydrating", "Low-Cal"]
+},
+{
+    name: "Sautéed Sesame Beans",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Warm, fiber-rich green bean toss.",
+    details: "Steam 200g green beans. Sauté in 1 tsp oil with garlic and 1 tbsp sesame seeds (Til). High in fiber and crunch.",
+    tags: ["Salad", "Warm", "Fiber"]
+},
+{
+    name: "Warm Mushroom & Garlic Wilt",
+    mealType: "Side",
+    proteinSource: "Mushroom",
+    vegType: "Veg",
+    summary: "Savory, low-calorie volume filler.",
+    details: "Sauté sliced mushrooms with 3 cloves of minced garlic and black pepper until browned. Toss with a handful of parsley or coriander at the end.",
+    tags: ["Salad", "Warm", "Low-Cal"]
+},
+{
+    name: "Lemony Broccoli & Almond Flakes",
+    mealType: "Side",
+    proteinSource: "Nuts",
+    vegType: "Veg",
+    summary: "Antioxidant-rich power side.",
+    details: "Blanch broccoli florets for 3 mins. Toss with slivered almonds and a heavy squeeze of lemon. Excellent pairing for Grilled Fish.",
+    tags: ["Salad", "Warm", "Antioxidant"]
+},
+{
+    name: "Tandoori Gobi (Cauliflower) Salad",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Spicy roasted cauliflower florets.",
+    details: "Toss cauliflower florets in curd and tandoori masala. Air-fry or roast until charred. Serve with a mint-curd dip.",
+    tags: ["Salad", "Roasted", "Fiber"]
+},
+{
+    name: "Sweet Potato & Peanut Mash",
+    mealType: "Side",
+    proteinSource: "Nuts",
+    vegType: "Veg",
+    summary: "Healthy carb side for energy.",
+    details: "Boiled sweet potato cubes tossed with roasted peanuts, lemon, and a hint of rock salt. Great for post-workout dinners.",
+    tags: ["Salad", "Warm", "Healthy Carbs"]
+},
+{
+    name: "Sprouted Lobia (Black-eyed Peas) Chaat",
+    mealType: "Snack",
+    proteinSource: "Lentils",
+    vegType: "Veg",
+    summary: "Hearty, filling legume salad (14g Protein).",
+    details: "Pressure cook lobia until tender. Mix with raw mango (if available), onions, and chaat masala. Very filling.",
+    tags: ["Salad", "High-Protein", "Filling"]
+},
+{
+    name: "Zucchini Noodles (Zoodles) Pesto",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "The ultimate low-carb pasta replacement.",
+    details: "Use a peeler to make thin strips of zucchini. Sauté for 2 mins (don't overcook). Toss with 1 tsp pesto or garlic butter.",
+    tags: ["Salad", "Warm", "Keto-friendly"]
+},
+{
+    name: "Masala Corn & Bell Pepper Medley",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Sweet and crunchy fiber boost.",
+    details: "Steam sweet corn kernels. Sauté with chopped red and yellow bell peppers. Season with oregano and chili flakes.",
+    tags: ["Salad", "Warm", "Colorful"]
+},
+{
+    name: "Pickled Onion & Beetroot Carpaccio",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Vinegar-based digestive side.",
+    details: "Thinly slice beetroot and onions. Soak in diluted apple cider vinegar or lemon juice for 20 mins. Sprinkle with sea salt.",
+    tags: ["Salad", "Raw", "Digestive"]
+},
+{
+    name: "Stir-Fried Bok Choy & Ginger",
+    mealType: "Side",
+    proteinSource: "Veg",
+    vegType: "Veg",
+    summary: "Asian-style light green side.",
+    details: "Flash-fry bok choy or any leafy greens with ginger matchsticks and a splash of soy sauce. Perfect with steamed fish.",
+    tags: ["Salad", "Warm", "Light"]
+},
+// --- Traditional & Millet Breakfasts (The Final Combined List) ---
+{ "name": "Poha", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Peanuts", "summary": "250 Cal", "details": "Flattened rice, onions, peanuts, curry leaves. Quick 10m breakfast. (250 Cal)" },
+  { "name": "Idli with Sambar", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Dal", "summary": "300 Cal", "details": "Steamed rice cakes with lentil soup. High fiber and light. (300 Cal)" },
+  { "name": "Rava Upma", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Semolina", "summary": "280 Cal", "details": "Semolina porridge with veggies and mustard seeds. (280 Cal)" },
+  { "name": "Ven Pongal", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Moong Dal", "summary": "320 Cal", "details": "Rice and moong dal mash with black pepper and cumin. (320 Cal)" },
+  { "name": "Foxtail Millet Pongal", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Moong Dal", "summary": "320 Cal", "details": "Foxtail millet and moong dal mash tempered with pepper, ginger, and cumin. (320 Cal)" },
+  { "name": "Ragi Idli", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Urad Dal", "summary": "280 Cal", "details": "Steamed cakes made with finger millet flour and urad dal. High calcium. (280 Cal)" },
+  { "name": "Barnyard Millet Upma", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Millet", "summary": "290 Cal", "details": "Barnyard millet cooked with mustard seeds, curry leaves, and mixed vegetables. (290 Cal)" },
+  { "name": "Pesarattu (Moong Dal Dosa)", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Green Moong", "summary": "310 Cal", "details": "Andhra-style dosa made with whole green gram and ginger. (310 Cal)" },
+  { "name": "Adai (Lentil Dosa)", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Mixed Dals", "summary": "340 Cal", "details": "Thick pancake made with a blend of Toor, Chana, and Moong dals. (340 Cal)" },
+  { "name": "Jowar Rotla with Curd", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Sorghum", "summary": "300 Cal", "details": "Sorghum flatbread served with fresh low-fat curd. Excellent fiber. (300 Cal)" },
+  { "name": "Bajra Khichdi", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Pearl Millet", "summary": "330 Cal", "details": "Pearl millet and moong dal cooked with vegetables and mild spices. (330 Cal)" },
+  { "name": "Besan Chilla", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Gram Flour", "summary": "250 Cal", "details": "Savory gram flour pancakes with onions, tomatoes, and chilies. (250 Cal)" },
+  { "name": "Kodo Millet Idli", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Urad Dal", "summary": "275 Cal", "details": "Light steamed idlis made using Kodo millet instead of rice. (275 Cal)" },
+  { "name": "Moong Dal Chilla", "mealType": "Breakfast", "vegType": "Veg", "proteinSource": "Yellow Moong", "summary": "240 Cal", "details": "Soft pancakes made from soaked and blended yellow moong dal. (240 Cal)" },
+  {
+        name: "Greek Yogurt Power Bowl",
+        mealType: "Breakfast",
+        vegType: "Veg",
+        summary: "Creamy, high-protein morning fuel.",
+        details: "1 cup Greek Yogurt, 1 scoop Whey (optional), berries, and chia seeds. Protein: 25g, Fiber: 6g. Quick and no-cook."
+    },
+    {
+        name: "Lemon Garlic Salmon",
+        mealType: "Lunch",
+        vegType: "Non-Veg",
+        summary: "Heart-healthy fats with a citrus kick.",
+        details: "Pan-seared salmon fillet with asparagus and quinoa. Protein: 35g, Fiber: 5g. Pair with a side of steamed broccoli."
+    },
+    {
+        name: "Tofu Stir-Fry",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "Crispy tofu with colorful veggies.",
+        details: "Extra firm tofu cubes, bell peppers, snap peas, and soy-ginger sauce. Protein: 20g, Fiber: 7g. Serve with brown rice."
+    },
+    {
+        name: "Cottage Cheese & Pineapple",
+        mealType: "Snack",
+        vegType: "Veg",
+        summary: "Sweet and savory protein snack.",
+        details: "1 cup low-fat cottage cheese with fresh pineapple chunks. Protein: 25g, Fiber: 2g. Ready in 1 minute."
+    },
+    {
+        name: "Turkey & Avocado Wraps",
+        mealType: "Lunch",
+        vegType: "Non-Veg",
+        summary: "Lean turkey in a high-fiber wrap.",
+        details: "Sliced turkey breast, avocado, and spinach in a whole-wheat tortilla. Protein: 28g, Fiber: 8g. Great for meal prep."
+    },
+    {
+        name: "Paneer Bhurji",
+        mealType: "Breakfast",
+        vegType: "Veg",
+        summary: "Spiced scrambled cottage cheese.",
+        details: "Crumbled paneer with onions, tomatoes, and green chilies. Protein: 18g, Fiber: 3g. Serve with 1 slice of multigrain toast.",
+        proteinSource: "Paneer"
+    },
+    {
+        name: "Chicken Tikka Salad",
+        mealType: "Lunch",
+        vegType: "Non-Veg",
+        summary: "Zesty grilled chicken over greens.",
+        details: "Roasted chicken chunks, cucumber, cherry tomatoes, and mint yogurt dressing. Protein: 32g, Fiber: 4g. High volume, low calorie.",
+        proteinSource: "Chicken"
+    },
+    {
+        name: "Moong Dal Chilla",
+        mealType: "Breakfast",
+        vegType: "Veg",
+        summary: "Savory lentil pancakes.",
+        details: "Soaked and ground moong dal batter with ginger and cumin. Protein: 12g, Fiber: 6g. Pair with green chutney.",
+        proteinSource: "Lentils"
+    },
+    {
+        name: "Tuna Salad Boats",
+        mealType: "Snack",
+        vegType: "Non-Veg",
+        summary: "Quick tuna scoops in lettuce.",
+        details: "Canned tuna (in water), light mayo, and celery inside Romaine leaves. Protein: 22g, Fiber: 2g.",
+        proteinSource: "Fish"
+    },
+    {
+        name: "Egg White Oats",
+        mealType: "Breakfast",
+        vegType: "Veg",
+        summary: "Fluffy, high-volume protein porridge.",
+        details: "Oats cooked with whisked egg whites stirred in at the end for creaminess. Protein: 20g, Fiber: 8g. Top with cinnamon.",
+        proteinSource: "Egg"
+    },
+    {
+        name: "Chickpea & Spinach Curry",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "Fiber-rich plant protein.",
+        details: "Chickpeas simmered in tomato gravy with a massive handful of spinach. Protein: 15g, Fiber: 12g.",
+        proteinSource: "Chickpeas"
+    },
+    {
+        name: "Grilled Prawn Skewers",
+        mealType: "Lunch",
+        vegType: "Non-Veg",
+        summary: "Light and spicy seafood.",
+        details: "Prawns marinated in chili and lime, grilled quickly. Protein: 24g, Fiber: 1g. Serve with a side salad.",
+        proteinSource: "Prawns"
+    },
+    {
+        name: "Hard Boiled Eggs & Almonds",
+        mealType: "Snack",
+        vegType: "Veg",
+        summary: "The ultimate portable snack.",
+        details: "2 Whole eggs and 10 almonds. Protein: 15g, Fiber: 3g. Perfect for mid-afternoon energy.",
+        proteinSource: "Egg"
+    },
+    {
+        name: "Soy Chunk Stir-Fry",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "The 'Vegetarian Meat' meal.",
+        details: "Boiled soy chunks sautéed with bell peppers and soy sauce. Protein: 25g, Fiber: 5g.",
+        proteinSource: "Soy"
+    },
+    {
+        name: "Greek Yogurt & Walnuts",
+        mealType: "Snack",
+        vegType: "Veg",
+        summary: "Thick, creamy protein treat.",
+        details: "Plain Greek yogurt topped with crushed walnuts. Protein: 18g, Fiber: 2g.",
+        proteinSource: "Yogurt"
+    },
+    {
+        name: "Steamed Fish with Ginger",
+        mealType: "Dinner",
+        vegType: "Non-Veg",
+        summary: "Clean, light, and high in lean protein.",
+        details: "White fish fillets steamed with julienned ginger, soy sauce, and scallions. Protein: 28g, Fiber: 1g.",
+        proteinSource: "Fish"
+    },
+    {
+        name: "Quinoa Black Bean Salad",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "A complete plant-based protein meal.",
+        details: "Chilled quinoa, black beans, corn, and cilantro lime dressing. Protein: 16g, Fiber: 10g.",
+        proteinSource: "Quinoa/Beans"
+    },
+    {
+        name: "Peanut Butter Protein Oats",
+        mealType: "Breakfast",
+        vegType: "Veg",
+        summary: "Hearty oats that taste like dessert.",
+        details: "Rolled oats, peanut butter, and a scoop of vanilla protein powder. Protein: 30g, Fiber: 7g.",
+        proteinSource: "Whey/PB"
+    },
+    {
+        name: "Garlic Butter Shrimp",
+        mealType: "Dinner",
+        vegType: "Non-Veg",
+        summary: "Fast, elegant, and pure protein.",
+        details: "Shrimp sautéed in garlic, butter, and parsley. Protein: 25g, Fiber: 0g. Serve over cauliflower rice.",
+        proteinSource: "Shrimp"
+    },
+    {
+        name: "Lentil Soup (Dal)",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "Classic, comforting protein soup.",
+        details: "Yellow lentils tempered with cumin, turmeric, and garlic. Protein: 14g, Fiber: 8g.",
+        proteinSource: "Lentils"
+    },
+    /* --- 5-MINUTE HIGH PROTEIN SNACKS --- */
+    {
+        name: "Edamame with Sea Salt",
+        mealType: "Snack",
+        vegType: "Veg",
+        summary: "Fastest plant protein on earth.",
+        details: "Steam frozen edamame for 3 mins. Sprinkle with sea salt and chili flakes. Protein: 18g, Fiber: 8g.",
+        proteinSource: "Soy"
+    },
+    {
+        name: "Smoked Salmon Roll-ups",
+        mealType: "Snack",
+        vegType: "Non-Veg",
+        summary: "Elegant, zero-cook protein bites.",
+        details: "Smoked salmon slices spread with light cream cheese and rolled around cucumber sticks. Protein: 20g, Fiber: 1g.",
+        proteinSource: "Fish"
+    },
+    {
+        name: "Turkey Pickle Wraps",
+        mealType: "Snack",
+        vegType: "Non-Veg",
+        summary: "Crunchy, salty, and lean.",
+        details: "Lean turkey breast slices wrapped around a large dill pickle spear with mustard. Protein: 15g, Fiber: 1g.",
+        proteinSource: "Turkey"
+    },
+    {
+        name: "Greek Yogurt Bark",
+        mealType: "Snack",
+        vegType: "Veg",
+        summary: "Frozen protein treat.",
+        details: "Spread Greek yogurt on parchment, top with nuts, and freeze. Protein: 12g, Fiber: 2g.",
+        proteinSource: "Yogurt"
+    },
+    {
+        name: "Beef Jerky & Apple",
+        mealType: "Snack",
+        vegType: "Non-Veg",
+        summary: "The ultimate road-trip snack.",
+        details: "Low-sodium beef jerky paired with a crisp apple. Protein: 14g, Fiber: 4g.",
+        proteinSource: "Beef"
+    },
+
+    /* --- ONE-POT DINNERS (Minimal Cleanup) --- */
+    {
+        name: "Sheet Pan Chicken & Veg",
+        mealType: "Dinner",
+        vegType: "Non-Veg",
+        summary: "One tray, total nutrition.",
+        details: "Chicken breasts, broccoli, and sweet potatoes tossed in olive oil and baked. Protein: 35g, Fiber: 6g.",
+        proteinSource: "Chicken"
+    },
+    {
+        name: "One-Pot Beef & Mushroom Stew",
+        mealType: "Dinner",
+        vegType: "Non-Veg",
+        summary: "Savory and deeply filling.",
+        details: "Lean beef chunks simmered with mushrooms, carrots, and onions in one pot. Protein: 32g, Fiber: 4g.",
+        proteinSource: "Beef"
+    },
+    {
+        name: "Lemon Orzo Chicken Pot",
+        mealType: "Dinner",
+        vegType: "Non-Veg",
+        summary: "Zesty one-pot pasta and poultry.",
+        details: "Chicken thighs cooked with orzo, spinach, and lemon zest in chicken broth. Protein: 28g, Fiber: 3g.",
+        proteinSource: "Chicken"
+    },
+    {
+        name: "Sausage & Pepper Skillet",
+        mealType: "Dinner",
+        vegType: "Non-Veg",
+        summary: "Quick, colorful, and savory.",
+        details: "Sliced turkey sausage sautéed with bell peppers and onions. Protein: 22g, Fiber: 4g.",
+        proteinSource: "Turkey Sausage"
+    },
+    {
+        name: "One-Pot Red Lentil Dahl",
+        mealType: "Dinner",
+        vegType: "Veg",
+        summary: "Creamy, spiced, and hearty.",
+        details: "Red lentils cooked with coconut milk, turmeric, and spinach. Protein: 18g, Fiber: 12g.",
+        proteinSource: "Lentils"
+    },
+
+    /* --- PLANT-BASED POWERHOUSES --- */
+    {
+        name: "Tempeh Stir-Fry",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "Nutty, fermented plant protein.",
+        details: "Marinated tempeh cubes sautéed with bok choy and sesame seeds. Protein: 22g, Fiber: 9g.",
+        proteinSource: "Tempeh"
+    },
+    {
+        name: "Seitan 'Steak' Strips",
+        mealType: "Dinner",
+        vegType: "Veg",
+        summary: "Highest protein plant source.",
+        details: "Seitan strips pan-seared with garlic and soy sauce. Protein: 35g, Fiber: 2g.",
+        proteinSource: "Seitan"
+    },
+    {
+        name: "High-Protein Pasta Salad",
+        mealType: "Lunch",
+        vegType: "Veg",
+        summary: "Chickpea pasta goodness.",
+        details: "Chickpea-based pasta with olives, feta, and cherry tomatoes. Protein: 20g, Fiber: 11g.",
+        proteinSource: "Chickpea Pasta"
+    },
+    {
+        name: "Tofu Scramble with Nutritional Yeast",
+        mealType: "Breakfast",
+        vegType: "Veg",
+        summary: "The vegan answer to eggs.",
+        details: "Crumbled tofu with turmeric and 2 tbsp nutritional yeast for B12 and protein. Protein: 22g, Fiber: 5g.",
+        proteinSource: "Tofu/Yeast"
+    },
+    {
+        name: "Black Bean Burgers",
+        mealType: "Dinner",
+        vegType: "Veg",
+        summary: "Homemade and grill-friendly.",
+        details: "Mashed black beans, walnuts, and spices formed into patties. Protein: 14g, Fiber: 12g.",
+        proteinSource: "Black Beans"
+    },
+    {
+    name: "Air Fryer Garlic Parme-Lettuce Wraps",
+    mealType: "Lunch",
+    vegType: "Non-Veg",
+    summary: "Crispy parmesan chicken over fresh lettuce with a spicy honey-mayo glaze.",
+    details: "Air fry chicken breast coated in garlic powder and parmesan until golden. Serve atop crisp lettuce leaves. Drizzle with a custom sauce of mayo, honey, soy sauce, and tabasco for a sweet-heat finish. Pair with: Extra cucumber slices for crunch. Protein: 32g | Fiber: 4g",
+    proteinSource: "Chicken"
+}
+ // Last recipe object
+]; // <--- This bracket closes your recipe list.
+
+// This looks at your computer's memory to see what you previously liked
+let favorites = JSON.parse(localStorage.getItem('myRecipesFavs')) || [];
+
+function toggleFavorite(recipeName) {
+    const index = favorites.indexOf(recipeName);
+    if (index > -1) {
+        favorites.splice(index, 1); // If it's already a favorite, remove it
+    } else {
+        favorites.push(recipeName); // If not, add it
+    }
+    // Save the new list to your computer's memory
+    localStorage.setItem('myRecipesFavs', JSON.stringify(favorites));
+    
+    // Refresh the screen so the heart changes color immediately
+    displayRecipes(recipes); 
+}
+
+function isFavorite(recipeName) {
+    return favorites.includes(recipeName);
+}
+
+// Add this at the end of your script section
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+
+</script>
+</body>
+</html>
